@@ -9,9 +9,12 @@ type DbConf struct {
 }
 
 var MasterDbConfig = DbConf{
-	Host:   "192.168.10.10",
-	Port:   "3306",
-	User:   "homestead",
+	//Host:   "192.168.10.10",
+	Host: "127.0.0.1",
+	Port: "3306",
+	//User:   "homestead",
+	User: "admin",
+	//Pwd:    "secret",
 	Pwd:    "secret",
 	DbName: "go_blog",
 }
