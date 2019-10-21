@@ -2,6 +2,7 @@ package routes
 
 import (
 	"bolg/app/controllers/category"
+	"bolg/app/controllers/reply"
 	"bolg/app/controllers/topic"
 	"bolg/app/controllers/user"
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,15 @@ func ApiRoutes() *gin.Engine {
 	r.PATCH("/topic/:id", topic.Edit)
 	//删除话题
 	r.DELETE("/topic/:id", topic.Delete)
+
+	//新增回复
+	r.POST("/topic/:id/reply", reply.Store)
+	//获取文章的回复列表
+	r.GET("/topic/:id/reply", reply.TopicIndex)
+	//获取用户的回复列表
+	r.GET("/user/:id/reply", reply.UserIndex)
+	//删除回复
+	r.DELETE("/reply/:id", reply.Delete)
 
 	return r
 }
