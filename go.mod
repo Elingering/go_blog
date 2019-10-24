@@ -9,4 +9,5 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/kr/pretty v0.1.0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
+	gopkg.in/go-playground/validator.v8 v8.18.2
 )

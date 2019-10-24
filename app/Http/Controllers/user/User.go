@@ -1,10 +1,12 @@
 package user
 
 import (
+	"bolg/app/Http/Requests"
 	"bolg/app/Models"
 	"bolg/app/Services"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/go-playground/validator.v8"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,18 +20,29 @@ func init() {
 
 //注册接口
 func Register(c *gin.Context) {
-	name := c.PostForm("name")
-	password := c.PostForm("password")
-	//string转int64
-	age, _ := strconv.ParseInt(c.PostForm("age"), 10, 8)
-	email := c.PostForm("email")
-	res := Services.DB.Create(&Models.User{Name: name, Password: password, Age: int8(age), Email: email})
-	checkErr(res.Error)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"code":    200,
-		"message": "",
-	})
+	var UserRequest Requests.UserRequest
+	if err := c.ShouldBind(&UserRequest); err == nil {
+		name := c.PostForm("name")
+		password := c.PostForm("password")
+		//string转int64
+		age, _ := strconv.ParseInt(c.PostForm("age"), 10, 8)
+		email := c.PostForm("email")
+		res := Services.DB.Create(&Models.User{Name: name, Password: password, Age: int8(age), Email: email})
+		checkErr(res.Error)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"code":    200,
+			"message": "",
+		})
+	} else {
+		// 验证错误
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"code":    400,
+			"message": UserRequest.GetError(err.(validator.ValidationErrors)), // 注意这里要将 err 进行转换
+			//"message": err.Error(), // 注意这里要将 err 进行转换
+		})
+	}
 }
 
 //登录接口
