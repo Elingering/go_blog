@@ -9,10 +9,22 @@ type DbConf struct {
 }
 
 var MasterDbConfig = DbConf{
-	//Host:   "192.168.10.10",
-	Host:   "127.0.0.1",
+	Host: "192.168.10.10",
+	//Host:   "127.0.0.1",
 	Port:   "3306",
 	User:   "homestead",
 	Pwd:    "secret",
 	DbName: "go_blog",
+}
+
+type TxConf struct {
+	Addr     string
+	Password string
+	DB       int
+}
+
+var MasterTxConfig = TxConf{
+	Addr:     "192.168.10.10:6379",
+	Password: "",
+	DB:       0,
 }

@@ -1,8 +1,8 @@
 package topic
 
 import (
-	"bolg/app/models"
-	"bolg/app/service"
+	"bolg/app/Models"
+	"bolg/app/Services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -10,7 +10,7 @@ import (
 
 func init() {
 	//自动检查 Topic 结构是否变化，变化则进行迁移
-	service.DB.AutoMigrate(&models.Topic{})
+	Services.DB.AutoMigrate(&Models.Topic{})
 }
 
 //新增话题
@@ -19,7 +19,7 @@ func Store(c *gin.Context) {
 	body := c.PostForm("body")
 	categoryId, _ := strconv.ParseInt(c.PostForm("category_id"), 10, 64)
 	userId := int64(1)
-	res := service.DB.Create(&models.Topic{Title: title, Body: body, CategoryId: categoryId, UserId: userId})
+	res := Services.DB.Create(&Models.Topic{Title: title, Body: body, CategoryId: categoryId, UserId: userId})
 	checkErr(res.Error)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -30,8 +30,8 @@ func Store(c *gin.Context) {
 
 //获取话题列表
 func Index(c *gin.Context) {
-	var topic []models.Topic
-	res := service.DB.Find(&topic)
+	var topic []Models.Topic
+	res := Services.DB.Find(&topic)
 	checkErr(res.Error)
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -43,8 +43,8 @@ func Index(c *gin.Context) {
 //话题详情
 func Detail(c *gin.Context) {
 	id := c.Param("id")
-	var topic models.Topic
-	res := service.DB.Where("id = ? ", id).First(&topic)
+	var topic Models.Topic
+	res := Services.DB.Where("id = ? ", id).First(&topic)
 	checkErr(res.Error)
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -59,8 +59,8 @@ func Edit(c *gin.Context) {
 	title := c.PostForm("title")
 	body := c.PostForm("body")
 	categoryId, _ := strconv.ParseInt(c.PostForm("category_id"), 10, 64)
-	var topic models.Topic
-	res := service.DB.First(&topic, id)
+	var topic Models.Topic
+	res := Services.DB.First(&topic, id)
 	checkErr(res.Error)
 	topic.Title = title
 	topic.Body = body
@@ -77,8 +77,8 @@ func Edit(c *gin.Context) {
 //删除话题
 func Delete(c *gin.Context) {
 	id := c.Param("id")
-	var topic models.Topic
-	res := service.DB.Delete(&topic, "id = ?", id)
+	var topic Models.Topic
+	res := Services.DB.Delete(&topic, "id = ?", id)
 	checkErr(res.Error)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
