@@ -18,16 +18,49 @@ func init() {
 	Services.DB.AutoMigrate(&Models.User{})
 }
 
+//获取验证码
+func GetCode(c *gin.Context) {
+	var CodeRequest Requests.CodeRequest
+	if err := c.ShouldBindQuery(&CodeRequest); err == nil {
+		phone := CodeRequest.Phone
+		code := Services.GetCode(phone)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"code":    200,
+			"message": code, //TODO 不输出 短信获取
+		})
+	} else {
+		// 验证错误
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"code":    400,
+			"message": CodeRequest.GetError(err.(validator.ValidationErrors)), // 注意这里要将 err 进行转换
+			//"message": err.Error(), // 注意这里要将 err 进行转换
+		})
+	}
+}
+
 //注册接口
 func Register(c *gin.Context) {
 	var UserRequest Requests.UserRequest
 	if err := c.ShouldBind(&UserRequest); err == nil {
-		name := c.PostForm("name")
-		password := c.PostForm("password")
-		//string转int64
-		age, _ := strconv.ParseInt(c.PostForm("age"), 10, 8)
-		email := c.PostForm("email")
-		res := Services.DB.Create(&Models.User{Name: name, Password: password, Age: int8(age), Email: email})
+		name := UserRequest.Name
+		password := UserRequest.Password
+		age := UserRequest.Age
+		email := UserRequest.Email
+		phone := UserRequest.Phone
+		code := UserRequest.Code
+		//验证码5分钟失效
+		val, err := Services.TX.Get(Services.PREFIX + phone).Result()
+		checkErr(err)
+		if val != code {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "error",
+				"code":    400,
+				"message": "验证码错误或过期",
+			})
+		}
+		res := Services.DB.Create(&Models.User{Name: name, Password: password, Age: age, Email: email, Phone: phone})
 		checkErr(res.Error)
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",

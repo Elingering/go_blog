@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "bolg/app/Providers"
 	"bolg/routes"
 )
 

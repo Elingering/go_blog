@@ -7,6 +7,7 @@ type User struct {
 	Reply    []Reply
 	Name     string
 	Password string
+	Phone    string
 	Age      int8
 	Email    string
 }
