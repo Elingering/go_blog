@@ -5,7 +5,9 @@ import (
 )
 
 type CodeRequest struct {
-	Phone string `form:"phone" binding:"required,phone"`
+	Phone   string `form:"phone" binding:"required,phone"`
+	CodeKey string `form:"code_key" binding:"required"`
+	Code    string `form:"code" binding:"required,len=5"`
 }
 
 func (r *CodeRequest) GetError(err validator.ValidationErrors) string {
@@ -17,6 +19,24 @@ func (r *CodeRequest) GetError(err validator.ValidationErrors) string {
 				return "请输入Phone"
 			case "phone":
 				return "Phone格式不正确"
+			}
+		}
+	}
+	if val, exist := err["CodeRequest.CodeKey"]; exist {
+		if val.Field == "CodeKey" {
+			switch val.Tag {
+			case "required":
+				return "请输入CodeKey"
+			}
+		}
+	}
+	if val, exist := err["CodeRequest.Code"]; exist {
+		if val.Field == "Code" {
+			switch val.Tag {
+			case "required":
+				return "请输入Code"
+			case "len":
+				return "Code长度为6个字符"
 			}
 		}
 	}

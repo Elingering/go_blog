@@ -18,16 +18,35 @@ func init() {
 	Services.DB.AutoMigrate(&Models.User{})
 }
 
-//获取验证码
+//获取图像验证码
+func GetVCode(c *gin.Context) {
+	codeKey, base64stringD := Services.GetVerificationCode()
+	c.String(http.StatusOK, codeKey+"\n"+base64stringD)
+}
+
+//获取手机验证码
 func GetCode(c *gin.Context) {
 	var CodeRequest Requests.CodeRequest
 	if err := c.ShouldBindQuery(&CodeRequest); err == nil {
 		phone := CodeRequest.Phone
-		code := Services.GetCode(phone)
+		codeKey := CodeRequest.CodeKey
+		code := CodeRequest.Code
+		res, err := Services.TX.Get(codeKey).Result()
+		checkErr(err)
+		if !Services.VerificationCode(res, code) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"code":    400,
+				"message": "验证码错误",
+			})
+			return
+		}
+		Services.TX.Del(codeKey)
+		Services.GetCode(phone)
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",
 			"code":    200,
-			"message": code, //TODO 不输出 短信获取
+			"message": "",
 		})
 	} else {
 		// 验证错误
@@ -37,6 +56,7 @@ func GetCode(c *gin.Context) {
 			"message": CodeRequest.GetError(err.(validator.ValidationErrors)), // 注意这里要将 err 进行转换
 			//"message": err.Error(), // 注意这里要将 err 进行转换
 		})
+		return
 	}
 }
 
@@ -52,13 +72,16 @@ func Register(c *gin.Context) {
 		code := UserRequest.Code
 		//验证码5分钟失效
 		val, err := Services.TX.Get(Services.PREFIX + phone).Result()
-		checkErr(err)
+		if "redis: nil" != err.Error() {
+			checkErr(err)
+		}
 		if val != code {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "error",
 				"code":    400,
 				"message": "验证码错误或过期",
 			})
+			return
 		}
 		res := Services.DB.Create(&Models.User{Name: name, Password: password, Age: age, Email: email, Phone: phone})
 		checkErr(res.Error)
@@ -75,6 +98,7 @@ func Register(c *gin.Context) {
 			"message": UserRequest.GetError(err.(validator.ValidationErrors)), // 注意这里要将 err 进行转换
 			//"message": err.Error(), // 注意这里要将 err 进行转换
 		})
+		return
 	}
 }
 
@@ -127,12 +151,12 @@ func Logout(c *gin.Context) {
 	if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
 		nx = claims.ExpiresAt
 	} else {
-		c.Abort()
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "error",
 			"code":    500,
 			"message": "logout error",
 		})
+		return
 	}
 	//redis 黑名单
 	Services.TX.SetNX(tokenString, 1, time.Duration(nx-time.Now().Unix())*time.Second)

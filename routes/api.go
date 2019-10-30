@@ -20,6 +20,8 @@ func ApiRoutes() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
+	//图形验证码
+	r.GET("/chapter", user.GetVCode)
 	//手机验证码
 	r.GET("/verification-code", user.GetCode)
 	//用户注册
